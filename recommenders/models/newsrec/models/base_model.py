@@ -10,6 +10,8 @@ from tensorflow.compat.v1 import keras
 
 from recommenders.models.deeprec.deeprec_utils import cal_metric
 
+from recommenders.utils.wandb import WandbLogger
+
 tf.compat.v1.disable_eager_execution()
 tf.compat.v1.experimental.output_all_intermediates(True)
 __all__ = ["BaseModel"]
@@ -31,6 +33,7 @@ class BaseModel:
         hparams,
         iterator_creator,
         seed=None,
+        logger=None
     ):
         """Initializing the model. Create common logics which are needed by all deeprec models, such as loss function,
         parameter set.
@@ -75,6 +78,12 @@ class BaseModel:
         self.train_optimizer = self._get_opt()
 
         self.model.compile(loss=self.loss, optimizer=self.train_optimizer)
+
+        if logger:
+            self.logger = logger
+        else:
+            self.logger = None
+
 
     def _init_embedding(self, file_path):
         """Load pre-trained embeddings as a constant tensor.
@@ -278,6 +287,10 @@ class BaseModel:
                     epoch, train_time, eval_time
                 )
             )
+
+            if self.logger:
+                self.logger.log_metrics({"train/logloss": epoch_loss / step})
+                self.logger.log_metrics(eval_res)
 
         return self
 

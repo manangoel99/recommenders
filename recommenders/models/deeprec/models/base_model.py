@@ -9,7 +9,6 @@ import numpy as np
 import tensorflow as tf
 from recommenders.models.deeprec.deeprec_utils import cal_metric
 
-
 tf.compat.v1.disable_eager_execution()
 __all__ = ["BaseModel"]
 
@@ -17,7 +16,7 @@ __all__ = ["BaseModel"]
 class BaseModel:
     """Base class for models"""
 
-    def __init__(self, hparams, iterator_creator, graph=None, seed=None):
+    def __init__(self, hparams, iterator_creator, graph=None, seed=None, wandb_logger=None):
         """Initializing the model. Create common logics which are needed by all deeprec models, such as loss function,
         parameter set.
 
@@ -70,6 +69,12 @@ class BaseModel:
         self.sess = tf.compat.v1.Session(
             graph=self.graph, config=tf.compat.v1.ConfigProto(gpu_options=gpu_options)
         )
+
+        if wandb_logger:
+            self.logger = wandb_logger
+        else:
+            self.logger = None
+
         self.sess.run(self.init_op)
 
     @abc.abstractmethod
@@ -533,6 +538,10 @@ class BaseModel:
                     epoch, train_time, eval_time
                 )
             )
+
+            if self.logger:
+                self.logger.log_metrics({"train/logloss": epoch_loss / step})
+                self.logger.log_metrics(eval_res)
 
         if self.hparams.write_tfevents:
             self.writer.close()

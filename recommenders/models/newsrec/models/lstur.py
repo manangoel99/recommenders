@@ -26,7 +26,7 @@ class LSTURModel(BaseModel):
         hparam (object): Global hyper-parameters.
     """
 
-    def __init__(self, hparams, iterator_creator, seed=None):
+    def __init__(self, hparams, iterator_creator, seed=None, logger=None):
         """Initialization steps for LSTUR.
         Compared with the BaseModel, LSTUR need word embedding.
         After creating word embedding matrix, BaseModel's __init__ method will be called.
@@ -40,7 +40,7 @@ class LSTURModel(BaseModel):
         self.word2vec_embedding = self._init_embedding(hparams.wordEmb_file)
         self.hparam = hparams
 
-        super().__init__(hparams, iterator_creator, seed=seed)
+        super().__init__(hparams, iterator_creator, seed=seed, logger=logger)
 
     def _get_input_label_from_iter(self, batch_data):
         input_feat = [
